@@ -1,0 +1,49 @@
+#! /usr/local/bin/python3
+import sys
+import subprocess
+try:
+    with open("/usr/local/bin/proxy.txt") as f:
+        content = f.readlines()
+    content = [x.strip() for x in content]
+except:
+    raise Exception("File proxy.txt must contain proxy details")
+if len(sys.argv) != 2 or sys.argv[1] not in ["set","on","off","get"]:
+    print("Options:\n\ton\n\toff\n\tset\n\tget")
+elif sys.argv[1] == "get":
+    print("Server Address: " + content[0])
+    print("Server Port: " + content[1])
+    print("Login Name: " + content[2])
+    print("Proxy Port: " + content[3])
+elif sys.argv[1] == "set":
+    options = [None] * 4
+    try:
+        options[0] = raw_input("Server Address: ")
+        options[1] = raw_input("Server Port (typically 22): ")
+        options[2] = raw_input("Login Name: ")
+        options[3] = raw_input("Proxy Port: ")
+    except:
+        options[0] = input("Server Address: ")
+        options[1] = input("Server Port (typically 22): ")
+        options[2] = input("Login Name: ")
+        options[3] = input("Proxy Port: ")
+    with open("/usr/local/bin/proxy.txt","w") as f:
+        write = ""
+        for i in options:
+            write += str(i) + "\n"
+        f.write(write)
+elif sys.argv[1] == "on":
+    subprocess.call("sudo networksetup -setsocksfirewallproxy Wi-Fi localhost " + content[3], shell=True)
+    subprocess.call("sudo networksetup -setsocksfirewallproxystate Wi-Fi on", shell=True)
+    subprocess.call("ssh -D " + content[3] + " -f -C -q -N " + content[2] + "@" + content[0] + " -p " + content[1], shell=True)
+elif sys.argv[1] == "off":
+    subprocess.call("sudo networksetup -setsocksfirewallproxystate Wi-Fi off", shell=True)
+    out = str(subprocess.check_output("ps -e | grep ssh | grep " + content[0], shell=True))
+    pid = ""
+    for i in out:
+        if i in ["0","1","2","3","4","5","6","7","8","9"]:
+            pid += i
+        elif len(pid) != 0:
+            break
+    if len(pid) == 0:
+        raise Exception()
+    subprocess.call("kill " + pid, shell=True)
