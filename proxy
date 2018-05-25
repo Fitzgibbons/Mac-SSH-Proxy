@@ -32,9 +32,9 @@ elif sys.argv[1] == "set":
             write += str(i) + "\n"
         f.write(write)
 elif sys.argv[1] == "on":
+    subprocess.call("ssh -D " + content[3] + " -f -q -C -N " + content[2] + "@" + content[0] + " -p " + content[1], shell=True)
     subprocess.call("sudo networksetup -setsocksfirewallproxy Wi-Fi localhost " + content[3], shell=True)
     subprocess.call("sudo networksetup -setsocksfirewallproxystate Wi-Fi on", shell=True)
-    subprocess.call("ssh -D " + content[3] + " -f -C -q -N " + content[2] + "@" + content[0] + " -p " + content[1], shell=True)
 elif sys.argv[1] == "off":
     subprocess.call("sudo networksetup -setsocksfirewallproxystate Wi-Fi off", shell=True)
     out = str(subprocess.check_output("ps -e | grep ssh | grep " + content[0], shell=True))
